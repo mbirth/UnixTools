@@ -1,0 +1,6 @@
+#!/bin/sh
+if [ -z "$1" ]; then
+    echo "Syntax: $0 <mountpoint> [-z]"
+    exit 0;
+fi
+fusermount -u "`readlink -f "$1"`" $2

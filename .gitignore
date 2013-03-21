@@ -1,0 +1,10 @@
+# files with sensible data
+fbclient/callclient.log
+fbclient/callclient.list
+CONFIG
+notify-xmpp.py
+*.mac
+
+
+# files pointing to scripts outside
+trid

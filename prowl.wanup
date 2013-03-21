@@ -1,0 +1,17 @@
+#!/bin/sh
+IFACE=ppp0
+OLDFILE=/tmp/ipaddr.cache
+
+HERE=`dirname $0`
+
+OLD_IP=`cat $OLDFILE`
+NEW_IP=`ifconfig ${IFACE} | sed '/.*inet addr:/!d;s///;s/ .*//'`
+
+PROWL_UP=""
+PROWL_DISH=""
+
+if [ "$NEW_IP" != "$OLD_IP" ]; then
+    $HERE/prowl.sh "ppp0 is $PROWL_UP" -2 "IP is $NEW_IP $PROWL_DISH"
+    echo $NEW_IP > $OLDFILE
+    echo Updated IP to $NEW_IP
+fi

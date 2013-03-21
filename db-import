@@ -1,0 +1,4 @@
+#!/bin/sh
+NEWEST=`ls -1r mysql-$1_*.sql.gz | head -1`
+echo "Importing newest backup $NEWEST to database $1 ..."
+gunzip -f -c "$NEWEST" | mysql "$@"

@@ -1,0 +1,5 @@
+#!/bin/sh
+STAMP=`date +"%Y%m%d-%H%M%S"`
+OUTPUT=mysql-ALL_$STAMP.sql.gz
+echo "Dumping COMPLETE SQL STORE to $OUTPUT ..."
+mysqldump -A -e "$@" | gzip -f --rsyncable >$OUTPUT

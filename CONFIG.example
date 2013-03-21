@@ -1,0 +1,7 @@
+# enter settings and rename to CONFIG
+
+NMA_RECIPIENT=012345...NotifyMyAndroid-API-KEY...6789abcdef
+PROWL_RECIPIENT=012345...Prowl API Key...6789abcdef
+
+# URL to WatchGuard auth page
+WATCHGUARD_URL="https://192.168.1.1:4100"

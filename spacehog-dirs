@@ -1,0 +1,7 @@
+#!/bin/bash
+echo Top 10 directory space hogs
+set DIR="$1"
+if [ -z $DIR ]; then
+    set DIR = "."
+fi 
+du -k $DIR | sort -n -r | head -n 10

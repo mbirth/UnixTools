@@ -1,0 +1,5 @@
+#!/bin/sh
+STAMP=`date +"%Y%m%d-%H%M%S"`
+OUTPUT=mysql-$1_$STAMP.sql.gz
+echo "Dumping database $1 to $OUTPUT ..."
+mysqldump -e "$@" | gzip -f --rsyncable >$OUTPUT

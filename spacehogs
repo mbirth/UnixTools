@@ -1,0 +1,7 @@
+#!/bin/bash
+echo Top 10 space hogs
+set DIR="$1"
+if [ -z $DIR ]; then
+    set DIR = "."
+fi
+find $DIR -type f -ls | sort -k 7 -r -n | head -10
