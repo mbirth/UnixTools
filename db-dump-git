@@ -1,0 +1,2 @@
+#!/bin/sh
+mysqldump --skip-extended-insert "$1" >"mysql-$1.sql"
