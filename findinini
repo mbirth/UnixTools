@@ -1,0 +1,3 @@
+#!/bin/bash
+grep $* -R extension/*/settings/ settings/ --include="*.ini" --include="*.ini.append.php" --color=auto
+

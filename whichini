@@ -1,0 +1,3 @@
+#!/bin/sh
+find -L extension/*/settings settings \( -iname "$1.ini" -o -iname "$1.ini.append.php" \) -not -path "*/.svn/*"
+
