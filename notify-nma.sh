@@ -7,7 +7,7 @@ fi
 
 HERE=`dirname $0`
 
-. $0/CONFIG
+. $HERE/CONFIG
 
 SEDSCRIPT=$HERE/urlencode.sed
 
