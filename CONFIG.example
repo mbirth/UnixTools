@@ -2,6 +2,13 @@
 
 NMA_RECIPIENT=012345...NotifyMyAndroid-API-KEY...6789abcdef
 PROWL_RECIPIENT=012345...Prowl API Key...6789abcdef
+PUSHOVER_RECIPIENT=012345...PushOver API Key...6789abcdef
 
 # URL to WatchGuard auth page
 WATCHGUARD_URL="https://192.168.1.1:4100"
+
+# URL-part of your Runtastic profile
+RUNTASTIC_USER_URL="markus-birth"
+
+# Create a new app on https://pushover.net/apps/build and enter API Token here
+RUNTASTIC_PUSHOVER_TOKEN="0123456...PushOver App Token...6789abcdef"
