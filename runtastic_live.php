@@ -6,14 +6,17 @@ $config = parse_ini_file($basedir . '/CONFIG');
 
 $user_url = $config['RUNTASTIC_USER_URL'];
 
-$fetch_url = sprintf('https://www.runtastic.com/en/users/%s/friends/live', $user_url);
-$status_file = '/tmp/runtastic.json';
+// $fetch_url = sprintf('https://www.runtastic.com/de/benutzer/%s/friends_live_sessions', $user_url);
+$fetch_url   = sprintf('https://www.runtastic.com/en/users/%s/friends_live_sessions', $user_url);
+$status_file = sprintf('/tmp/runtastic_%s.json', $user_url);
 
 $stamp = time();
 echo sprintf('STARTED: %s', date('Y-m-d H:i:s', $stamp)) . PHP_EOL;
 
 $data = file_get_contents($fetch_url);
-#$data = file_get_contents('runtastic_live1.html');
+#$data = file_get_contents('runtastic_live5.html');
+
+$data = '<root>' . $data . '</root>';
 
 libxml_use_internal_errors(true);   // prevent generation of PHP Warnings
 $dom = new DOMDocument();
@@ -23,10 +26,8 @@ libxml_use_internal_errors(false);
 
 $xp = new DOMXpath($dom);
 
-$friends = $xp->query('//div[@id="friends_js"]')->item(0);
-$f_list = $xp->query('div[contains(@class, "friend")]', $friends);
-
-$f_num = $f_list->length;
+$f_list = $xp->query('//div[contains(@class, "run_session")]');
+$f_num  = $f_list->length;
 
 echo sprintf('Found %u active friend%s:', $f_num, ($f_num!=1)?'s':'') . PHP_EOL;
 
@@ -35,8 +36,8 @@ foreach ($f_list as $f) {
     $name = $xp->query('.//a[@title]/@title', $f)->item(0)->nodeValue;
     $profile_url = $xp->query('.//a[@title]/@href', $f)->item(0)->nodeValue;
     $avatar = $xp->query('.//img/@src', $f)->item(0)->nodeValue;
-    $session_url = $xp->query('.//a[@data-gaq-action]/@href', $f)->item(0)->nodeValue;
-    $activity = strtr(trim($xp->query('.//div[@class="userinfo"]/text()', $f)->item(0)->textContent), "\r\n", "  ");
+    $session_url = $xp->query('.//a[not(@title)]/@href', $f)->item(0)->nodeValue;
+    $activity = strtr(trim($xp->query('.//div[@class="content"]/text()', $f)->item(0)->textContent), "\r\n", "  ");
 
     echo sprintf('%s: %s (%s)', $name, $activity, $session_url) . PHP_EOL;
 
@@ -49,7 +50,12 @@ foreach ($f_list as $f) {
     );
 }
 
-$o_arr = json_decode(@file_get_contents($status_file), true);
+if (file_exists($status_file)) {
+    $o_arr = json_decode(@file_get_contents($status_file), true);
+} else {
+    $o_arr = array();
+}
+
 file_put_contents($status_file, json_encode($f_arr));
 
 /************************************************************************************/
@@ -66,10 +72,6 @@ if (count($new) + count($stopped) == 0) {
     echo 'Nothing to notify about.' . PHP_EOL;
     exit(1);
 }
-
-$pushover_api = 'https://api.pushover.net/1/messages.json';
-$pushover_token = $config['RUNTASTIC_PUSHOVER_TOKEN'];
-$user_key = $config['PUSHOVER_RECIPIENT'];
 
 if (count($new) + count($stopped) == 1) {
     if (count($new) > 0) {
@@ -101,36 +103,58 @@ if (count($new) + count($stopped) == 1) {
         $message .= sprintf('%u other%s still going strong.', count($old), count($old)>1?'s':'');
     }
     $title .= ': ' . implode(', ', $names);
-    $url       = $fetch_url;
+    $url       = sprintf('https://www.runtastic.com/en/users/%s/friends/live', $user_url);
     $url_title = 'Runtastic Live';
 }
 
-$notify_data = array(
-    'token' => $pushover_token,
-    'user' => $user_key,
-    'title' => $title,
-    'message' => $message,
-    'url' => $url,
-    'url_title' => $url_title,
-    'priority' => 0,
-    'timestamp' => $stamp,
-    'sound' => 'bike',
-);
+/****************************************************************************************/
 
-$data_str = http_build_query($notify_data);
+function notify_pushover($recipient, $subject, $message, $url, $url_title, $priority = 0, $timestamp = '', $sound = '')
+{
+    global $config;
 
-$context = stream_context_create(array(
-    'http' => array(
-        'method' => 'POST',
-        'header' => "Content-Type: application/x-www-form-urlencoded\r\n" .
-                    "Content-Length: " . strlen($data_str) . "\r\n",
-        'content' => $data_str,
-    ),
-));
+    $pushover_api = 'https://api.pushover.net/1/messages.json';
+    $notify_data = array(
+        'token' => $config['RUNTASTIC_PUSHOVER_TOKEN'],
+        'user' => $recipient,
+        'title' => $subject,
+        'message' => $message,
+        'url' => $url,
+        'url_title' => $url_title,
+        'priority' => $priority,
+        'timestamp' => $timestamp,
+        'sound' => $sound,
+    );
 
-print_r($notify_data);
+    $data_str = http_build_query($notify_data);
 
-$result = file_get_contents($pushover_api, false, $context);
+    $context = stream_context_create(array(
+        'http' => array(
+            'method' => 'POST',
+            'header' => "Content-Type: application/x-www-form-urlencoded\r\n" .
+                        "Content-Length: " . strlen($data_str) . "\r\n",
+            'content' => $data_str,
+        ),
+    ));
+
+    print_r($notify_data);
+
+    return file_get_contents($pushover_api, false, $context);
+}
+
+function notify_email($recipient, $subject, $message, $url, $url_title)
+{
+    $subject = '[Runtastic] ' . $subject;
+    $message .= PHP_EOL . PHP_EOL . $url_title . ': ' . $url;
+
+    echo 'Subject: ' . $subject . PHP_EOL . $message . PHP_EOL;
+
+    return mail($recipient, $subject, $message);
+}
+
+$result = notify_pushover($config['PUSHOVER_RECIPIENT'], $title, $message, $url, $url_title, 0, $stamp, 'bike');
+// $result = notify_email($config['EMAIL_RECIPIENT'], $title, $message, $url, $url_title);
+
 if ($result === false) {
     echo 'ERROR: Problem sending notification.' . PHP_EOL;
     exit(2);
