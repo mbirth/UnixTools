@@ -16,7 +16,7 @@ echo sprintf('STARTED: %s', date('Y-m-d H:i:s', $stamp)) . PHP_EOL;
 $data = file_get_contents($fetch_url);
 #$data = file_get_contents('runtastic_live5.html');
 
-$data = '<root>' . $data . '</root>';
+$data = '<?xml encoding="utf-8" ?><root>' . $data . '</root>';
 
 libxml_use_internal_errors(true);   // prevent generation of PHP Warnings
 $dom = new DOMDocument();
