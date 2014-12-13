@@ -85,7 +85,7 @@ if (count($new) + count($stopped) == 1) {
     if (count($old) > 0) {
         $message .= PHP_EOL . sprintf('%u other%s still going strong.', count($old), count($old)>1?'s':'');
     }
-    $url       = $friend['session_url'];
+    $url       = $friend['session_url'] . '?beta=true';
     $url_title = 'Runtastic session';
 } else {
     $title = sprintf('%u Runtastic updates', count($new) + count($stopped));
@@ -103,7 +103,7 @@ if (count($new) + count($stopped) == 1) {
         $message .= sprintf('%u other%s still going strong.', count($old), count($old)>1?'s':'');
     }
     $title .= ': ' . implode(', ', $names);
-    $url       = sprintf('https://www.runtastic.com/en/users/%s/friends/live', $user_url);
+    $url       = sprintf('https://www.runtastic.com/en/users/%s/friends/live?beta=true', $user_url);
     $url_title = 'Runtastic Live';
 }
 
