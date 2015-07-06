@@ -1,8 +1,16 @@
 #!/bin/sh
-echo -n "dump1090: "
-cd /opt/flightradar24/dump1090.git
-git pull
-cd - >/dev/null
+#echo -n "dump1090: "
+#cd /opt/flightradar24/dump1090.git
+#git pull
+#cd - >/dev/null
+echo -n "fr24feed: "
+FR24_INST=`apt-cache policy fr24feed | grep "Installed" | cut -d" " -f4`
+FR24_LIVE=`wget -q -O - "http://feed.flightradar24.com/linux/" | grep -o "fr24feed_.*_i386.deb" | sed 's/^.*fr24feed_\(.*\)_i386.deb.*$/\1/'`
+if [ "$FR24_INST" != "$FR24_LIVE" ]; then
+    echo "new version: $FR24_LIVE (currently installed: $FR24_INST)"
+else
+    echo "up-to-date ($FR24_INST)."
+fi
 echo -n "newznab: "
 cd /opt/newznab
 svn up
