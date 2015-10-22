@@ -1,5 +1,6 @@
 #!/bin/sh
 if [ -z "$1" -o -z "$2" ]; then
+    echo "Sets EXIF date to DATE."
     echo "Syntax: $0 DATE FILE1 [FILE2 [..FILEn]]"
     exit 1
 fi
