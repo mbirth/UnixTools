@@ -1,28 +1,22 @@
 #!/bin/bash
 PWD=`pwd`
 DIRNAME=`basename "$PWD"`
-GITDIR="../$DIRNAME.GIT"
+if [ ! -d "$HOME/.bazaar/plugins/fastimport" ]; then
+    echo "Fastimport plugin not found. Installing..."
+    bzr branch lp:bzr-fastimport ~/.bazaar/plugins/fastimport
+fi
+
 echo "Processing: $DIRNAME"
 if [ ! -d ".bzr" ]; then
     echo "No .bzr directory here. Is this a BZR branch?"
     exit 1
 fi
-if [ -d "$GITDIR" ]; then
-    echo "$GITDIR already exists. Rename it and try again."
+if [ -d ".git" ]; then
+    echo ".git already exists. Rename it and try again."
     exit 2
 fi
-echo "Creating bzr-git repo in $GITDIR"
-mkdir "$GITDIR"
-bzr init --format=git "$GITDIR"
-echo "Pushing revisions to $GITDIR"
-bzr dpush "$GITDIR"
-echo "cd'ing"
-cd "$GITDIR"
-echo "Fixing branch"
-git branch master
-git checkout master
-echo "Resetting branch"
-git reset --hard HEAD
-echo "cd'ing back"
-cd -
+echo "Creating git repo in $DIRNAME"
+git init
+echo "Ex-/Importing repository..."
+bzr fast-export | git fast-import
 echo "All done."
