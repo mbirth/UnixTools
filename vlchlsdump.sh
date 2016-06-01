@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 if [ "$1" == "" -or "$2" == "" ]; then
     echo "Syntax: $0 URL OUTPUTFILE"
 fi
