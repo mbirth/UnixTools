@@ -12,3 +12,7 @@ RUNTASTIC_USER_URL="markus-birth"
 
 # Create a new app on https://pushover.net/apps/build and enter API Token here
 RUNTASTIC_PUSHOVER_TOKEN="0123456...PushOver App Token...6789abcdef"
+
+# Login for packtclaim.py
+PACKT_LOGIN    = anon@example.org
+PACKT_PASSWORD = 1234567
