@@ -5,10 +5,11 @@
 
 import configparser
 import logging
+import sys
 from grab import Grab
 from io import StringIO
 
-config_str = '[DEFAULT]\n' + open('CONFIG', 'r').read()
+config_str = '[DEFAULT]\n' + open(sys.path[0] + '/CONFIG', 'r').read()
 config_fp  = StringIO(config_str)
 
 c = configparser.RawConfigParser()
