@@ -16,3 +16,10 @@ RUNTASTIC_PUSHOVER_TOKEN="0123456...PushOver App Token...6789abcdef"
 # Login for packtclaim.py
 PACKT_LOGIN    = anon@example.org
 PACKT_PASSWORD = 1234567
+
+# WunderCam Proxy
+SNAPSHOT_URL="http://my-ip-camera.com/tmpfs/snap.jpg"
+SNAPSHOT_USERNAME="guest"
+SNAPSHOT_PASSWORD="password"
+WUNDERCAM_USERNAME="mypersonalCAM1"
+WUNDERCAM_PASSWORD="secretpassword"
