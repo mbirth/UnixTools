@@ -10,5 +10,11 @@ if [ -n "$2" ]; then
 #    SUBPARAMS=( -f srt -i "$2" -map 0:0 -map 0:1 -map 1:0 -c:s srt )    # mkv
 fi
 # For source mpeg4: -bsf:v mpeg4_unpack_bframes
+# Quality: -crf 18 = almost lossless, -crf 22 = medium, -crf 28 = low
+# Deinterlace: -vf yadif=1 -field-dominance 0/1 (0=Top field first, 1=Bottom field first; doubles framerate)
+#           or -vf yadif=1:0 (or 1:1)
+#              -vf yadif=0 (calculates 1 frame from both fields; keeps framerate)
+# Scale: -vf scale=-1:720
 #ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v h264 -c:a libvo_aacenc -preset fast -movflags +faststart -crf 18 -b:a 192k -ac 2 "$1.mp4"
+#ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v h264 -c:a aac -preset fast -movflags +faststart -vf yadif=1:0,scale=-1:720 -crf 18 -b:a 160k -ar 44100 -ac 2 "$1.mp4"
 ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v h264 -c:a aac -preset fast -movflags +faststart -crf 18 -b:a 160k -ar 44100 -ac 2 "$1.mp4"
