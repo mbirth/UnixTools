@@ -25,3 +25,5 @@ cd -
 wget -q -O - "http://www.sublimetext.com/3" | grep "The latest build is"
 wget -q -O - "http://www.sublimetext.com/3dev" | grep "The current Sublime Text 3"
 sudo apt update
+sudo apt list --upgradable
+
