@@ -33,6 +33,39 @@ class PacktBook():
         self.dl_mobi = ""
         self.dl_code = ""
 
+    def __str__(self):
+        output = "["
+        output += "P" if self.dl_pdf else "-"
+        output += "e" if self.dl_epub else "-"
+        output += "K" if self.dl_mobi else "-"
+        output += "Z" if self.dl_code else "-"
+        output += "] {} ({})".format(self.title, self.isbn)
+        return output
+
+    def parse_from_xsel(self, book: selection.backend.XpathSelector):
+        self.title = book.select("@title").text()
+        self.nid = book.select("@nid").text()
+        self.cover_img = book.select(".//img/@src").text().replace("imagecache/thumbview/", "")
+
+        isbn = book.select(".//div/@isbn")
+        if isbn:
+            self.isbn = isbn.text()
+
+        self.dl_pdf = book.select(".//a[div/@format='pdf']/@href").text()
+
+        dl_epub = book.select(".//a[div/@format='epub']/@href")
+        if dl_epub:
+            self.dl_epub = dl_epub.text()
+
+        dl_mobi = book.select(".//a[div/@format='mobi']/@href")
+        if dl_mobi:
+            self.dl_mobi = dl_mobi.text()
+
+        dl_code = book.select(".//a[starts-with(@href, '/code_download')]/@href")
+        if dl_code:
+            self.dl_code = dl_code.text()
+
+
 class PacktPub():
     def __init__(self):
         self.g = Grab()
@@ -62,33 +95,13 @@ class PacktPub():
         self.g.go(url)
         self.g.doc.save('/tmp/packtpub-my-ebooks.html')
         self.g.doc.text_assert('<h1>My eBooks </h1>')
-        return self.g.doc.select('//div[@id="product-account-list"]/div[starts-with(@class, "product-line")][@title]')
-
-    def parse_book_xsel(self, book: selection.backend.XpathSelector):
-        b = PacktBook()
-        b.title = book.select("@title").text()
-        b.nid = book.select("@nid").text()
-        b.cover_img = book.select(".//img/@src").text().replace("imagecache/thumbview/", "")
-
-        isbn = book.select(".//div/@isbn")
-        if isbn:
-            b.isbn = isbn.text()
-
-        b.dl_pdf = book.select(".//a[div/@format='pdf']/@href").text()
-
-        dl_epub = book.select(".//a[div/@format='epub']/@href")
-        if dl_epub:
-            b.dl_epub = dl_epub.text()
-
-        dl_mobi = book.select(".//a[div/@format='mobi']/@href")
-        if dl_mobi:
-            b.dl_mobi = dl_mobi.text()
-
-        dl_code = book.select(".//a[starts-with(@href, '/code_download')]/@href")
-        if dl_code:
-            b.dl_code = dl_code.text()
-
-        return b
+        all_books_xsel = self.g.doc.select('//div[@id="product-account-list"]/div[starts-with(@class, "product-line")][@title]')
+        all_books = []
+        for b in all_books_xsel:
+            book_obj = PacktBook()
+            book_obj.parse_from_xsel(b)
+            all_books.append(book_obj)
+        return all_books
 
 p = PacktPub()
 #p.login(c.get('DEFAULT', 'PACKT_LOGIN'), c.get('DEFAULT', 'PACKT_PASSWORD'))
@@ -97,16 +110,6 @@ all_books = p.get_ebooks_list("file:///tmp/packtpub-my-ebooks.html")
 print("Found {:d} ebooks.".format(len(all_books)))
 
 ctr = 1
-for b in all_books:
-    book = p.parse_book_xsel(b)
-    print("{:d}: {} ({})".format(ctr, book.title, book.isbn))
-    if book.dl_pdf:
-        print("  [PDF]", end="")
-    if book.dl_epub:
-        print("  [ePub]", end="")
-    if book.dl_mobi:
-        print("  [MOBI]", end="")
-    if book.dl_code:
-        print("  [Code]", end="")
-    print("")
+for book in all_books:
+    print("{:d}: {}".format(ctr, book))
     ctr += 1
