@@ -8,6 +8,7 @@ import configparser
 import logging
 import selection
 import sys
+from argparse import ArgumentParser
 from grab import Grab
 from io import StringIO
 
@@ -102,6 +103,15 @@ class PacktPub():
             book_obj.parse_from_xsel(b)
             all_books.append(book_obj)
         return all_books
+
+parser = ArgumentParser(description="List or download all purchased ebooks from your PACKT account.")
+parser.add_argument("--start", help="Index to start at (default: 1)", metavar="NUMBER", type=int, dest="idx_start", required=False)
+parser.add_argument("-n", "--count", help="Number of items to download, starting at --start index", metavar="COUNT", type=int, dest="count", required=False)
+parser.add_argument("--end", help="Index to stop at (default: last)", metavar="NUMBER", type=int, dest="idx_end", required=False)
+#parser.add_argument("--verbose", help="Verbose logging to STDERR", action="store_true")
+opts = parser.parse_args()
+opts = vars(opts)
+
 
 p = PacktPub()
 #p.login(c.get('DEFAULT', 'PACKT_LOGIN'), c.get('DEFAULT', 'PACKT_PASSWORD'))
