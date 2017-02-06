@@ -6,6 +6,7 @@
 
 import configparser
 import logging
+import os.path
 import selection
 import sys
 from argparse import ArgumentParser
@@ -26,6 +27,7 @@ class LoggedOutException(Exception):
 class PacktBook():
     def __init__(self):
         self.title = ""
+        self.url = ""
         self.isbn = ""
         self.nid = ""
         self.cover_img = ""
@@ -43,8 +45,16 @@ class PacktBook():
         output += "] {} ({})".format(self.title, self.isbn)
         return output
 
+    def get_safe_name(self):
+        '''Returns the name of the book safe for using for file names.'''
+        name = self.title
+
     def parse_from_xsel(self, book: selection.backend.XpathSelector):
+        '''Parses the DOM section in `book`'''
         self.title = book.select("@title").text()
+        if self.title[-8:].lower() == " [ebook]":
+            self.title = self.title[:-8]
+        self.url = "https://www.packtpub.com" + book.select(".//div[@class='product-top-line']/div/a/@href").text()
         self.nid = book.select("@nid").text()
         self.cover_img = book.select(".//img/@src").text().replace("imagecache/thumbview/", "")
 
@@ -104,22 +114,57 @@ class PacktPub():
             all_books.append(book_obj)
         return all_books
 
+    def download_book_all(self, book: PacktBook, destination_directory):
+        '''Downloads all available files for given book to destination_directory/book_name.'''
+        if url.startswith("http") and not self.logged_in:
+            raise LoggedOutException("Must be logged in before getting ebooks list!")
+        base_name = book.get_safe_name()
+        if not os.path.exists(destination_directory):
+            os.makedirs(destination_directory, mode=0o775, exist_ok=True)
+        self.g.download(book.dl_pdf, destination_directory + "/" + base_name + ".pdf")
+
 parser = ArgumentParser(description="List or download all purchased ebooks from your PACKT account.")
-parser.add_argument("--start", help="Index to start at (default: 1)", metavar="NUMBER", type=int, dest="idx_start", required=False)
+parser.add_argument("--start", help="Index to start at (default: 1)", metavar="NUMBER", type=int, dest="idx_start", required=False, default=1)
 parser.add_argument("-n", "--count", help="Number of items to download, starting at --start index", metavar="COUNT", type=int, dest="count", required=False)
 parser.add_argument("--end", help="Index to stop at (default: last)", metavar="NUMBER", type=int, dest="idx_end", required=False)
 #parser.add_argument("--verbose", help="Verbose logging to STDERR", action="store_true")
 opts = parser.parse_args()
 opts = vars(opts)
 
-
 p = PacktPub()
-#p.login(c.get('DEFAULT', 'PACKT_LOGIN'), c.get('DEFAULT', 'PACKT_PASSWORD'))
-#all_books = p.get_ebooks_list()
-all_books = p.get_ebooks_list("file:///tmp/packtpub-my-ebooks.html")
+if os.path.isfile("/tmp/packtpub-my-ebooks.html"):
+    all_books = p.get_ebooks_list("file:///tmp/packtpub-my-ebooks.html")
+else:
+    p.login(c.get('DEFAULT', 'PACKT_LOGIN'), c.get('DEFAULT', 'PACKT_PASSWORD'))
+    all_books = p.get_ebooks_list()
+
 print("Found {:d} ebooks.".format(len(all_books)))
 
-ctr = 1
-for book in all_books:
-    print("{:d}: {}".format(ctr, book))
-    ctr += 1
+if opts["idx_end"] or opts["count"]:
+    # Some range given: Download books
+    idx_start = opts["idx_start"]
+    if idx_start < 1:
+        idx_start = 1
+
+    if opts["idx_end"]:
+        idx_end = opts["idx_end"]
+    elif opts["count"]:
+        idx_end = idx_start + opts["count"] - 1
+    else:
+        idx_end = idx_start
+
+    if idx_end < idx_start:
+        idx_end = idx_start
+
+    if idx_end > len(all_books):
+        idx_end = len(all_books)
+
+    print("Selected range: {:d} to {:d}".format(idx_start, idx_end))
+
+    for i in range(idx_start, idx_end+1):
+        print("{:d}: {}".format(i, all_books[i-1]))
+
+else:
+    # No selection made: Show list
+    for i in range(0, len(all_books)):
+        print("{:d}: {}".format(i+1, all_books[i]))
