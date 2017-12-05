@@ -1,3 +1,4 @@
 #!/bin/sh
-#mp3gain -k -p -r -s i "$@"
-replaygain --no-album "$@"
+# Install mp3gain from: https://launchpad.net/~flexiondotorg/+archive/ubuntu/audio
+mp3gain -k -p -r -s i "$@"
+#replaygain --no-album "$@"
