@@ -7,8 +7,10 @@
 import configparser
 import logging
 import os.path
+import re
 import selection
 import sys
+import unicodedata
 from argparse import ArgumentParser
 from grab import Grab
 from io import StringIO
@@ -48,6 +50,10 @@ class PacktBook():
     def get_safe_name(self):
         '''Returns the name of the book safe for using for file names.'''
         name = self.title
+        name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode('ascii')
+        name = re.sub('[^\w\s-]', '', name).strip()
+        name = re.sub('[-\s]+', '_', name)
+        return name
 
     def parse_from_xsel(self, book: selection.backend.XpathSelector):
         '''Parses the DOM section in `book`'''
@@ -62,19 +68,19 @@ class PacktBook():
         if isbn:
             self.isbn = isbn.text()
 
-        self.dl_pdf = book.select(".//a[div/@format='pdf']/@href").text()
+        self.dl_pdf = "https://www.packtpub.com" + book.select(".//a[div/@format='pdf']/@href").text()
 
         dl_epub = book.select(".//a[div/@format='epub']/@href")
         if dl_epub:
-            self.dl_epub = dl_epub.text()
+            self.dl_epub = "https://www.packtpub.com" + dl_epub.text()
 
         dl_mobi = book.select(".//a[div/@format='mobi']/@href")
         if dl_mobi:
-            self.dl_mobi = dl_mobi.text()
+            self.dl_mobi = "https://www.packtpub.com" + dl_mobi.text()
 
         dl_code = book.select(".//a[starts-with(@href, '/code_download')]/@href")
         if dl_code:
-            self.dl_code = dl_code.text()
+            self.dl_code = "https://www.packtpub.com" + dl_code.text()
 
 
 class PacktPub():
@@ -116,11 +122,12 @@ class PacktPub():
 
     def download_book_all(self, book: PacktBook, destination_directory):
         '''Downloads all available files for given book to destination_directory/book_name.'''
-        if url.startswith("http") and not self.logged_in:
-            raise LoggedOutException("Must be logged in before getting ebooks list!")
+        if not self.logged_in:
+            raise LoggedOutException("Must be logged in before download!")
         base_name = book.get_safe_name()
         if not os.path.exists(destination_directory):
             os.makedirs(destination_directory, mode=0o775, exist_ok=True)
+        print("Downloading PDF of {} from {}".format(base_name, book.dl_pdf))
         self.g.download(book.dl_pdf, destination_directory + "/" + base_name + ".pdf")
 
 parser = ArgumentParser(description="List or download all purchased ebooks from your PACKT account.")
@@ -132,10 +139,10 @@ opts = parser.parse_args()
 opts = vars(opts)
 
 p = PacktPub()
+p.login(c.get('DEFAULT', 'PACKT_LOGIN'), c.get('DEFAULT', 'PACKT_PASSWORD'))
 if os.path.isfile("/tmp/packtpub-my-ebooks.html"):
     all_books = p.get_ebooks_list("file:///tmp/packtpub-my-ebooks.html")
 else:
-    p.login(c.get('DEFAULT', 'PACKT_LOGIN'), c.get('DEFAULT', 'PACKT_PASSWORD'))
     all_books = p.get_ebooks_list()
 
 print("Found {:d} ebooks.".format(len(all_books)))
@@ -163,6 +170,7 @@ if opts["idx_end"] or opts["count"]:
 
     for i in range(idx_start, idx_end+1):
         print("{:d}: {}".format(i, all_books[i-1]))
+        p.download_book_all(all_books[i-1], "/tmp/packt")
 
 else:
     # No selection made: Show list
