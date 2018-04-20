@@ -5,7 +5,7 @@
 TARGET_LOUDNESS=-14
 
 # Normalise MP3 to 89 dB, add tags to file
-mp3gain -q -k -p -r -s i "$1" > /dev/null
+LD_PRELOAD= mp3gain -q -k -p -r -s i "$1" > /dev/null
 
 # Find actual EBU R128 loudness, show relative to $TARGET_LOUDNESS LUFS
 LOUDADJUST=`bs1770gain --norm $TARGET_LOUDNESS --xml "$1" | grep -m 1 integrated | sed -e 's/^.*lu="\(.*\)".*$/\1/'`
@@ -21,7 +21,7 @@ GAINADJUST=`printf %0.f $GAINADJUST`
 if [ "$GAINADJUST" -ne 0 ]; then
     echo "[$1] Adjust gain by: $GAINADJUST"
     # Use this call to have clipping-prevention which doesn't work when modifying gain directly
-    mp3gain -q -k -p -r -s i -m $GAINADJUST "$1"
+    LD_PRELOAD= mp3gain -q -k -p -r -s i -m $GAINADJUST "$1"
 else
     echo "[$1] No further adjustment necessary."
 fi
