@@ -5,7 +5,7 @@
 ATSC_MODE="pan=stereo|FL<1.0*FL+0.707*FC+0.707*BL|FR<1.0*FR+0.707*FC+0.707*BR"
 NIGHT_MODE="pan=stereo|FL=FC+0.30*FL+0.30*BL|FR=FC+0.30*FR+0.30*BR"
 
-ffmpeg -report -loglevel verbose -i "$1" -map 0:a:1 -c:a aac -b:a 160k -ar 44100 -ac 2 -af $NIGHT_MODE "${1}_2ch.m4a"
+ffmpeg -report -loglevel verbose -i "$1" -map 0:a:0 -c:a aac -b:a 160k -ar 44100 -ac 2 -af $NIGHT_MODE "${1}_2ch.m4a"
 
 
 # Merge with:
