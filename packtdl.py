@@ -147,7 +147,7 @@ else:
 
 print("Found {:d} ebooks.".format(len(all_books)))
 
-if opts["idx_end"] or opts["count"]:
+if opts["idx_start"] > 1 or opts["idx_end"] or opts["count"]:
     # Some range given: Download books
     idx_start = opts["idx_start"]
     if idx_start < 1:
@@ -158,7 +158,7 @@ if opts["idx_end"] or opts["count"]:
     elif opts["count"]:
         idx_end = idx_start + opts["count"] - 1
     else:
-        idx_end = idx_start
+        idx_end = len(all_books)
 
     if idx_end < idx_start:
         idx_end = idx_start
