@@ -19,5 +19,7 @@ fi
 # Set audio language: -metadata:s:a:0 language=eng
 #ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v h264 -c:a libvo_aacenc -preset fast -movflags +faststart -crf 18 -b:a 192k -ac 2 "$1.mp4"
 #ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v h264 -c:a aac -preset fast -movflags +faststart -vf yadif=0,scale=-2:720 -crf 18 -b:a 160k -ar 44100 -ac 2 "$1.mp4"
-ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v h264 -c:a aac -preset fast -movflags +faststart -vf scale=-2:720 -crf 20 -b:a 160k -ar 44100 -ac 2 "$1.mp4"
-#ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v h264 -c:a aac -preset fast -movflags +faststart -crf 18 -b:a 160k -ar 44100 -ac 2 "$1.mp4"
+#ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v h264 -c:a aac -preset fast -movflags +faststart -vf scale=-2:720 -crf 20 -b:a 160k -ar 44100 -ac 2 "$1.mp4"
+#ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v h264 -c:a aac -preset fast -movflags +faststart -crf 20 -b:a 160k -ar 44100 -ac 2 "$1.mp4"
+ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v h264 -c:a aac -preset fast -movflags +faststart -crf 25 -b:a 96k -ar 44100 -ac 2 "$1.mp4"
+#ffmpeg -i "$1" "${SUBPARAMS[@]}" -c:v libx265 -c:a aac -preset fast -movflags +faststart -crf 20 -b:a 160k -ar 44100 -ac 2 "$1.x265.mp4"
