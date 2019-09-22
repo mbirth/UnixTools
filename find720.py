@@ -65,6 +65,8 @@ for root, dirs, files in os.walk("."):
                 "width": vmeta["width"],
                 "height": vmeta["height"],
                 "filesize": meta["format"]["size"],
+                "format": meta["codec_name"],
+                "codec": meta["codec_tag_string"],
             }
             large_vids.append(record)
             print("+", end="", file=sys.stderr, flush=True)
@@ -80,4 +82,4 @@ large_vids.sort(key=lambda x: int(x["filesize"]), reverse=True)
 
 for v in large_vids:
     print(v["filepath"])
-    print("{:=4}x{:=4} {} {}".format(v["width"], v["height"], nice_size(v["filesize"]), v["filepath"]), file=sys.stderr)
+    print("{:=4}x{:=4} {} {} {} ({})".format(v["width"], v["height"], v["codec"], nice_size(v["filesize"]), v["filepath"], v["format"]), file=sys.stderr)
