@@ -56,6 +56,7 @@ def add_video_params(params, out_idx, stream):
         fc += ",yadif=1"   # 1 = use detected field_order, doubles framerate / 0 = merge both fields into frame, keeps framerate
         # To force field_order: 1:0 (top field first) or 1:1 (bottom field first) / -field-dominance 0 or -field-dominance 1
         params["filter_complex"].append(fc)
+    # Force progressive: setfield=mode=prog
 
 def add_audio_params(params, out_idx, stream):
     params["c:a"] = "aac"
@@ -85,7 +86,7 @@ def build_ffmpeg_cmd(params):
 FILENAME = sys.argv[1]
 
 data = ffprobe(FILENAME)
-pprint(data)
+#pprint(data)
 
 video_streams = []
 audio_streams = []
@@ -100,10 +101,29 @@ for s in data["streams"]:
         s["tags"]["language"] = DEFAULT_LANGUAGE
     if codec == "video":
         video_streams.append(s)
+        print("Input #{}: Video {} {}x{}{}".format(
+            s["index"],
+            s["codec_name"],
+            s["width"],
+            s["height"],
+            "p" if s["field_order"] == "progressive" else "i"
+        ))
     elif codec == "audio":
         audio_streams.append(s)
+        print("Input #{}: Audio {} {}ch {} ({})".format(
+            s["index"],
+            s["codec_name"],
+            s["channels"],
+            s["channel_layout"],
+            s["tags"]["language"]
+        ))
     else:
         other_streams.append(s)
+        print("Input #{}: Data {} {}".format(
+            s["index"],
+            s["codec_type"],
+            s["codec_name"]
+        ))
 
 # Make sure first audio is FIRST_LANGUAGE
 if audio_streams[0]["tags"]["language"] != FIRST_LANGUAGE:
@@ -133,5 +153,5 @@ for i, s in enumerate(output_streams):
 
 cmd = build_ffmpeg_cmd(params)
 
-pprint(output_streams)
+#pprint(output_streams)
 print(" ".join(cmd))
