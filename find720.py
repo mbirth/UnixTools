@@ -65,8 +65,8 @@ for root, dirs, files in os.walk("."):
                 "width": vmeta["width"],
                 "height": vmeta["height"],
                 "filesize": meta["format"]["size"],
-                "format": meta["codec_name"],
-                "codec": meta["codec_tag_string"],
+                "format": vmeta["codec_name"],
+                "codec": vmeta["codec_tag_string"],
             }
             large_vids.append(record)
             print("+", end="", file=sys.stderr, flush=True)
