@@ -67,7 +67,11 @@ def add_audio_params(params, out_idx, stream):
         params["filter_complex"].append("[0:{}]{}".format(stream["index"], NIGHT_MODE))
     else:
         params["filter_complex"].append("[0:{}]{}".format(stream["index"], STEREO))
-    params["metadata:s:{}".format(out_idx)] = "language={}".format(stream["tags"]["language"])
+    lang = stream["tags"]["language"]
+    if lang in ["und"]:
+        print("Language fallback from \"{}\" to \"{}\".".format(lang, DEFAULT_LANGUAGE))
+        lang = DEFAULT_LANGUAGE
+    params["metadata:s:{}".format(out_idx)] = "language={}".format(lang)
 
 def add_sub_params(params, out_idx, stream):
     pass
