@@ -71,15 +71,15 @@ def add_audio_params(params, out_idx, stream):
         params["filter_complex"].append("[0:{}]{}".format(stream["index"], STEREO))
     lang = stream["tags"]["language"]
     if lang in ["und"]:
-        print("Language fallback from \"{}\" to \"{}\".".format(lang, DEFAULT_LANGUAGE))
+        print("Language fallback from \"{}\" to \"{}\".".format(lang, DEFAULT_LANGUAGE), file=sys.stderr)
         lang = DEFAULT_LANGUAGE
     params["metadata:s:{}".format(out_idx)] = "language={}".format(lang)
 
 def add_sub_params(params, out_idx, stream):
     pass
 
-def build_ffmpeg_cmd(params):
-    cmd = ["nice", "ffmpeg", "-i", "\"{}\"".format(FILENAME)]
+def build_ffmpeg_cmd(filename, params):
+    cmd = ["nice", "ffmpeg", "-i", "\"{}\"".format(filename)]
     for p, v in params.items():
         if p == "map":
             for s in v:
@@ -91,78 +91,80 @@ def build_ffmpeg_cmd(params):
             cmd.append("\"{}\"".format(";".join(v)))
         else:
             cmd.append(v)
-    cmd.append("\"{}.mkv\"".format(FILENAME))
+    cmd.append("\"{}.mkv\"".format(filename))
     return cmd
 
-FILENAME = sys.argv[1]
+def get_optimise_cmdline(filename):
+    data = ffprobe(filename)
+    #pprint(data)
 
-data = ffprobe(FILENAME)
-#pprint(data)
+    video_streams = []
+    audio_streams = []
+    other_streams = []
+    for s in data["streams"]:
+        codec = s["codec_type"]
+        if not "tags" in s:
+            s["tags"] = {
+                "language": DEFAULT_LANGUAGE
+            }
+        elif not "language" in s["tags"]:
+            s["tags"]["language"] = DEFAULT_LANGUAGE
+        if codec == "video":
+            video_streams.append(s)
+            print("Input #{}: Video {} {}x{}{}".format(
+                s["index"],
+                s["codec_name"],
+                s["width"],
+                s["height"],
+                "p" if "field_order" not in s or s["field_order"] == "progressive" else "i"
+            ), file=sys.stderr)
+        elif codec == "audio":
+            audio_streams.append(s)
+            print("Input #{}: Audio {} {}ch {} ({})".format(
+                s["index"],
+                s["codec_name"],
+                s["channels"],
+                s["channel_layout"],
+                s["tags"]["language"]
+            ), file=sys.stderr)
+        else:
+            other_streams.append(s)
+            print("Input #{}: Data {} {}".format(
+                s["index"],
+                s["codec_type"],
+                s["codec_tag_string"]
+            ), file=sys.stderr)
 
-video_streams = []
-audio_streams = []
-other_streams = []
-for s in data["streams"]:
-    codec = s["codec_type"]
-    if not "tags" in s:
-        s["tags"] = {
-            "language": DEFAULT_LANGUAGE
-        }
-    elif not "language" in s["tags"]:
-        s["tags"]["language"] = DEFAULT_LANGUAGE
-    if codec == "video":
-        video_streams.append(s)
-        print("Input #{}: Video {} {}x{}{}".format(
-            s["index"],
-            s["codec_name"],
-            s["width"],
-            s["height"],
-            "p" if "field_order" not in s or s["field_order"] == "progressive" else "i"
-        ))
-    elif codec == "audio":
-        audio_streams.append(s)
-        print("Input #{}: Audio {} {}ch {} ({})".format(
-            s["index"],
-            s["codec_name"],
-            s["channels"],
-            s["channel_layout"],
-            s["tags"]["language"]
-        ))
-    else:
-        other_streams.append(s)
-        print("Input #{}: Data {} {}".format(
-            s["index"],
-            s["codec_type"],
-            s["codec_tag_string"]
-        ))
+    # Make sure first audio is FIRST_LANGUAGE
+    if audio_streams[0]["tags"]["language"] != FIRST_LANGUAGE:
+        for i, s in enumerate(audio_streams):
+            if s["tags"]["language"] == FIRST_LANGUAGE:
+                del audio_streams[i]
+                audio_streams.insert(0, s)
+                break
 
-# Make sure first audio is FIRST_LANGUAGE
-if audio_streams[0]["tags"]["language"] != FIRST_LANGUAGE:
-    for i, s in enumerate(audio_streams):
-        if s["tags"]["language"] == FIRST_LANGUAGE:
-            del audio_streams[i]
-            audio_streams.insert(0, s)
-            break
+    output_streams = video_streams + audio_streams + other_streams
 
-output_streams = video_streams + audio_streams + other_streams
+    # Now process streams in order to build command line
+    params = OrderedDict({
+        "map": [],
+        "filter_complex": []
+    })
+    for i, s in enumerate(output_streams):
+        codec = s["codec_type"]
+        if codec == "video":
+            add_video_params(params, i, s)
+        elif codec == "audio":
+            add_audio_params(params, i, s)
+        elif codec == "subtitle":
+            add_sub_params(params, i, s)
+        else:
+            print("Unknown codec_type: {}".format(codec), file=sys.stderr)
 
-# Now process streams in order to build command line
-params = OrderedDict({
-    "map": [],
-    "filter_complex": []
-})
-for i, s in enumerate(output_streams):
-    codec = s["codec_type"]
-    if codec == "video":
-        add_video_params(params, i, s)
-    elif codec == "audio":
-        add_audio_params(params, i, s)
-    elif codec == "subtitle":
-        add_sub_params(params, i, s)
-    else:
-        print("Unknown codec_type: {}".format(codec))
+    cmd = build_ffmpeg_cmd(filename, params)
 
-cmd = build_ffmpeg_cmd(params)
+    #pprint(output_streams)
+    return " ".join(cmd)
 
-#pprint(output_streams)
-print(" ".join(cmd))
+for f in sys.argv[1:]:
+    print(get_optimise_cmdline(f))
