@@ -122,7 +122,7 @@ for s in data["streams"]:
         print("Input #{}: Data {} {}".format(
             s["index"],
             s["codec_type"],
-            s["codec_name"]
+            s["codec_tag_string"]
         ))
 
 # Make sure first audio is FIRST_LANGUAGE
