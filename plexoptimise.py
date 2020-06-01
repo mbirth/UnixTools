@@ -51,7 +51,7 @@ def add_video_params(params, out_idx, stream):
         params["filter_complex"].append("[0:{}]null".format(stream["index"]))
         params["c:v"] = "copy"
     params["movflags"] = "+faststart"
-    if stream["field_order"] != "progressive":
+    if "field_order" in stream and stream["field_order"] != "progressive":
         fc = params["filter_complex"].pop()
         fc += ",yadif=1"   # 1 = use detected field_order, doubles framerate / 0 = merge both fields into frame, keeps framerate
         # To force field_order: 1:0 (top field first) or 1:1 (bottom field first) / -field-dominance 0 or -field-dominance 1
@@ -106,7 +106,7 @@ for s in data["streams"]:
             s["codec_name"],
             s["width"],
             s["height"],
-            "p" if s["field_order"] == "progressive" else "i"
+            "p" if "field_order" not in s or s["field_order"] == "progressive" else "i"
         ))
     elif codec == "audio":
         audio_streams.append(s)
