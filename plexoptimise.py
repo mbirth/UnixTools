@@ -34,6 +34,7 @@ def ffprobe(filepath):
         return loads(out)
 
 def add_video_params(params, out_idx, stream):
+    params["map"].append("0:{}".format(stream["index"]))
     if int(stream["height"]) > 720 or stream["codec_name"] != "h264":
         params["c:v"] = "h264"
         params["preset"] = "fast"
@@ -59,6 +60,7 @@ def add_video_params(params, out_idx, stream):
     # Force progressive: setfield=mode=prog
 
 def add_audio_params(params, out_idx, stream):
+    params["map"].append("0:{}".format(stream["index"]))
     params["c:a"] = "aac"
     params["b:a"] = "96k"
     params["ar"] = "44100"
@@ -79,6 +81,11 @@ def add_sub_params(params, out_idx, stream):
 def build_ffmpeg_cmd(params):
     cmd = ["nice", "ffmpeg", "-i", "\"{}\"".format(FILENAME)]
     for p, v in params.items():
+        if p == "map":
+            for s in v:
+                cmd.append("-{}".format(p))
+                cmd.append(s)
+            continue
         cmd.append("-{}".format(p))
         if p == "filter_complex":
             cmd.append("\"{}\"".format(";".join(v)))
@@ -141,7 +148,7 @@ output_streams = video_streams + audio_streams + other_streams
 
 # Now process streams in order to build command line
 params = OrderedDict({
-    "map": "0",
+    "map": [],
     "filter_complex": []
 })
 for i, s in enumerate(output_streams):
