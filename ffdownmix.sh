@@ -7,6 +7,10 @@ NIGHT_MODE="pan=stereo|FL=FC+0.30*FL+0.30*BL|FR=FC+0.30*FR+0.30*BR"
 
 ffmpeg -report -loglevel verbose -i "$1" -map 0:a:0 -c:a aac -b:a 160k -ar 44100 -ac 2 -af $NIGHT_MODE "${1}_2ch.m4a"
 
+# Normalize/Analyze:
+# ffmpeg -i "$1" -af "volumedetect" -vn -sn -dn -f null /dev/null
+# Normalize/Apply:
+# ffmpeg -i "$1" -af "volume=5dB" -c:v copy -c:a aac .... or combine with above downmix
 
 # Merge with:
 # ffmpeg -i original_file.mkv -i audio_eng_downmix.m4a -i audio_ger_downmix.m4a -map 0 -map 1:0 -map 2:0 -codec copy -metadata:s:a:2 title="English (night mode)" -metadata:s:a:2 language=eng -metadata:s:a:3 title="Deutsch (Nachtmodus)" -metadata:s:a:3 language="ger" output_file.mkv
