@@ -1,5 +1,9 @@
 # enter settings and rename to CONFIG
 
+# Bluetooth headset MAC address (all uppercase, e.g. 01_23_45_AB_CD_EF)
+BTHEADSET_MAC=01_23_45_AB_CD_EF
+
+# Notification recipients
 NMA_RECIPIENT=012345...NotifyMyAndroid-API-KEY...6789abcdef
 PROWL_RECIPIENT=012345...Prowl API Key...6789abcdef
 PUSHOVER_RECIPIENT=012345...PushOver API Key...6789abcdef
